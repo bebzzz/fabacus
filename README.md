@@ -1,7 +1,7 @@
 # fabacus
 test task for fabacus
 
-  Objective
+   Objective
   The main goal is to create a fully available web service using Terraform, running on AWS ECS.
 
   Description
