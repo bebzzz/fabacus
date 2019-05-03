@@ -38,3 +38,7 @@ variable "vpc_subnet" {
         "private2"          =   "10.10.4.0/24"
     }
 }
+
+variable "instance_type" {
+    default     =   "t2.micro"
+}
