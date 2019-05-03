@@ -17,9 +17,9 @@ resource "aws_autoscaling_group" "fabacus-cluster" {
   termination_policies      = ["OldestInstance"]
 
   tag {
-    key                 = "Name"
-    value               = "ECS-fabacus"
-    propagate_at_launch = true
+    key                     =   "Name"
+    value                   =   "ECS-fabacus"
+    propagate_at_launch     =   true
   }
 }
 
@@ -56,11 +56,17 @@ resource "aws_launch_configuration" "cluster-lc" {
   # key_name                    = "${aws_key_pair.demodev.key_name}"
   image_id                    = "${var.images["${var.region}"]}"
   instance_type               = "${var.instance_type}"
-  iam_instance_profile        = "${aws_iam_instance_profile.ecs-ec2-role.id}"
+  #iam_instance_profile        = "${aws_iam_instance_profile.ecs-ec2-role.id}"
   user_data                   = "${data.template_file.ecs-cluster.rendered}"
   associate_public_ip_address = false
 
   lifecycle {
     create_before_destroy = true
   }
+}
+
+# Create a new ALB Target Group attachment
+resource "aws_autoscaling_attachment" "asg_attachment_bar" {
+  autoscaling_group_name    =   "${aws_autoscaling_group.fabacus-cluster.id}"
+  alb_target_group_arn      =   "${aws_lb_target_group.web.arn}"
 }
