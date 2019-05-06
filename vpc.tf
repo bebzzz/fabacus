@@ -1,7 +1,7 @@
 # Create a VPC to launch ECS into
 resource "aws_vpc" "fabacus_vpc" {
     cidr_block              =   "${var.vpc_cidr_block}"
-    enable_dns_hostnames    =   "True"   
+    enable_dns_hostnames    =   "True"
     instance_tenancy        =   "default"
     tags                    =   {
         Name                =   "Fabacus_VPC"
@@ -13,7 +13,7 @@ resource "aws_vpc" "fabacus_vpc" {
 resource "aws_network_acl" "main" {
     vpc_id                  =   "${aws_vpc.fabacus_vpc.id}"
     subnet_ids              =   ["${aws_subnet.private.id}", "${aws_subnet.public.id}", "${aws_subnet.private2.id}", "${aws_subnet.public2.id}"]
-    
+
     egress {
         protocol            =   "tcp"
         rule_no             =   200
@@ -23,7 +23,7 @@ resource "aws_network_acl" "main" {
         from_port           =   "0"
         to_port             =   "0"
     }
-    
+
     ingress {
         protocol            =   "tcp"
         rule_no             =   100
@@ -40,6 +40,14 @@ resource "aws_network_acl" "main" {
         from_port           =   "443"
         to_port             =   "443"
     }
+    ingress {
+        protocol            =   "tcp"
+        rule_no             =   110
+        action              =   "allow"
+        cidr_block          =   "0.0.0.0/0"
+        from_port           =   "32768"
+        to_port             =   "65535"
+    }
     tags = {
     Name = "main_ACL"
     }
@@ -53,13 +61,25 @@ resource "aws_internet_gateway" "igw" {
     }
 }
 
+# Create NAT gateways for pricate subnets
+resource "aws_nat_gateway" "gw1" {
+  allocation_id = "${aws_eip.nat.id}"
+  subnet_id     = "${aws_subnet.public.id}"
+}
+
+# Alocate Elastic IP for NAT gateway
+resource "aws_eip" "nat" {
+  vpc      = true
+}
+
+
 # Create public subnet for VPC
 resource "aws_subnet" "public" {
     vpc_id                  =   "${aws_vpc.fabacus_vpc.id}"
     cidr_block              =   "${var.vpc_subnet["public"]}"
     map_public_ip_on_launch =   "true"
     availability_zone       =   "${var.region}a"
-    
+
     tags = {
     Name = "fabacus_public_subnet"
     }
@@ -82,7 +102,7 @@ resource "aws_subnet" "private" {
     cidr_block              =   "${var.vpc_subnet["private"]}"
     map_public_ip_on_launch =   "false"
     availability_zone       =   "${var.region}a"
-    
+
     tags = {
     Name = "fabacus_private_subnet"
     }
@@ -93,7 +113,7 @@ resource "aws_subnet" "private2" {
     cidr_block              =   "${var.vpc_subnet["private2"]}"
     map_public_ip_on_launch =   "false"
     availability_zone       =   "${var.region}b"
-    
+
     tags = {
     Name = "fabacus_private2_subnet"
     }
@@ -122,6 +142,14 @@ resource "aws_route" "pub_route" {
     destination_cidr_block    =   "0.0.0.0/0"
     gateway_id                =   "${aws_internet_gateway.igw.id}"
     depends_on                =   ["aws_route_table.pub_rt"]
+}
+
+# Create route for private route table
+resource "aws_route" "priv_route1" {
+    route_table_id            =   "${aws_route_table.priv_rt.id}"
+    destination_cidr_block    =   "0.0.0.0/0"
+    gateway_id                =   "${aws_nat_gateway.gw1.id}"
+    depends_on                =   ["aws_route_table.priv_rt"]
 }
 
 
@@ -159,14 +187,14 @@ resource "aws_security_group" "allow_http" {
         protocol                =   "tcp"
         cidr_blocks             =   ["0.0.0.0/0"]
     }
-  
+
     ingress {
         from_port               =   80
         to_port                 =   80
         protocol                =   "tcp"
         cidr_blocks             =   ["0.0.0.0/0"]
     }
-    
+
     egress {
         from_port               =   0
         to_port                 =   0

@@ -11,14 +11,6 @@
           "hostPort": 80,
           "protocol": "tcp"
         }
-      ],
-      "logConfiguration": {
-          "logDriver": "awslogs",
-          "options": {
-              "awslogs-group": "awslogs-nginx-ecs",
-              "awslogs-region": "us-east-1",
-              "awslogs-stream-prefix": "nginx"
-          }
-      }
+      ]
     }
 ]

@@ -7,7 +7,7 @@ resource "aws_ecs_cluster" "fabacus" {
 #Compute
 resource "aws_autoscaling_group" "fabacus-cluster" {
   name                      = "fabacus-cluster"
-  vpc_zone_identifier       = ["${aws_subnet.public.id}", "${aws_subnet.public2.id}"]
+  vpc_zone_identifier       = ["${aws_subnet.private.id}", "${aws_subnet.private2.id}"]
   min_size                  = "2"
   max_size                  = "10"
   desired_capacity          = "2"
@@ -53,10 +53,10 @@ resource "aws_launch_configuration" "cluster-lc" {
   name_prefix     = "fabacus-cluster-lc"
   security_groups = ["${aws_security_group.allow_http.id}"]
 
-  # key_name                    = "${aws_key_pair.demodev.key_name}"
+  #key_name                    = "bebz"
   image_id                    = "${var.images["${var.region}"]}"
   instance_type               = "${var.instance_type}"
-  #iam_instance_profile        = "${aws_iam_instance_profile.ecs-ec2-role.id}"
+  iam_instance_profile        = "${aws_iam_instance_profile.ecs-ec2-role.id}"
   user_data                   = "${data.template_file.ecs-cluster.rendered}"
   associate_public_ip_address = false
 
@@ -69,4 +69,5 @@ resource "aws_launch_configuration" "cluster-lc" {
 resource "aws_autoscaling_attachment" "asg_attachment_bar" {
   autoscaling_group_name    =   "${aws_autoscaling_group.fabacus-cluster.id}"
   alb_target_group_arn      =   "${aws_lb_target_group.web.arn}"
+  depends_on                =   ["aws_launch_configuration.cluster-lc", "aws_autoscaling_group.fabacus-cluster"]
 }

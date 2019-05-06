@@ -1,6 +1,7 @@
-# AWS credentials are stored in the file ~/.aws/credentials 
+# AWS credentials are stored in the file ~/.aws/credentials
 
 provider "aws" {
-    region                  =   "${var.region}"
+    #access_key              = 
+    #secret_key              =
+    region                  = "us-east-1"
 }
-
