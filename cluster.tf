@@ -1,8 +1,7 @@
 # Create ECS cluster
 resource "aws_ecs_cluster" "fabacus" {
-    name                    =   "fabacus"
+  name = "fabacus"
 }
-
 
 #Compute
 resource "aws_autoscaling_group" "fabacus-cluster" {
@@ -17,9 +16,9 @@ resource "aws_autoscaling_group" "fabacus-cluster" {
   termination_policies      = ["OldestInstance"]
 
   tag {
-    key                     =   "Name"
-    value                   =   "ECS-fabacus"
-    propagate_at_launch     =   true
+    key                 = "Name"
+    value               = "ECS-fabacus"
+    propagate_at_launch = true
   }
 }
 
@@ -39,13 +38,12 @@ resource "aws_autoscaling_policy" "fabacus-cluster" {
   }
 }
 
-
 # User data for ECS cluster
 data "template_file" "ecs-cluster" {
-  template                  =   "${file("ecs-cluster.tpl")}"
+  template = "${file("ecs-cluster.tpl")}"
 
   vars {
-    ecs_cluster             =   "${aws_ecs_cluster.fabacus.name}"
+    ecs_cluster = "${aws_ecs_cluster.fabacus.name}"
   }
 }
 
@@ -67,7 +65,7 @@ resource "aws_launch_configuration" "cluster-lc" {
 
 # Create a new ALB Target Group attachment
 resource "aws_autoscaling_attachment" "asg_attachment_bar" {
-  autoscaling_group_name    =   "${aws_autoscaling_group.fabacus-cluster.id}"
-  alb_target_group_arn      =   "${aws_lb_target_group.web.arn}"
-  depends_on                =   ["aws_launch_configuration.cluster-lc", "aws_autoscaling_group.fabacus-cluster"]
+  autoscaling_group_name = "${aws_autoscaling_group.fabacus-cluster.id}"
+  alb_target_group_arn   = "${aws_lb_target_group.web.arn}"
+  depends_on             = ["aws_launch_configuration.cluster-lc", "aws_autoscaling_group.fabacus-cluster"]
 }
